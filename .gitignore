@@ -4,18 +4,20 @@ venv/
 *.pyc
 
 # Python cache
-__cache__/
+__pycache__/
 
 # Database file
 *.db
 *.sqlite3
 
 # Environment variables
-# Ignore all .env files
 .env
 .env.*
-# Except for the example file
 !*.env.example
+
+# NEW: Log files
+app.log
+*.log
 
 # OS-specific files
 .DS_Store
