@@ -1,6 +1,6 @@
-# **User-Specific To-Do API with FastAPI & JWT Authentication**
+# **User-Specific To-Do App with FastAPI & JWT Authentication**
 
-A **secure, user-specific To-Do application** built with **FastAPI** and **SQLite**, featuring **JWT authentication** and a **simple web UI**. Each user can register, log in, and manage their personal tasks — creating, reading, updating, and deleting their own todos.
+A **secure, user-specific To-Do application** built with **FastAPI** and **SQLite**, featuring **JWT authentication** and a **simple web UI**. Each user can register, log in, and manage their personal tasks — creating, reading, updating, and deleting only their own todos.
 
 ---
 
@@ -18,11 +18,11 @@ A **secure, user-specific To-Do application** built with **FastAPI** and **SQLit
 
 ### **Tech Stack**
 
-* Backend: **FastAPI**, **Python**
-* Database: **SQLite** (can be swapped with PostgreSQL for production)
-* Authentication: **JWT (JSON Web Tokens)**
-* Frontend: **HTML + CSS + JavaScript (optional)**
-* Password Security: **bcrypt hashing via passlib**
+* **Backend**: FastAPI, Python
+* **Database**: SQLite (can be replaced with PostgreSQL for production)
+* **Authentication**: JWT (JSON Web Tokens)
+* **Frontend**: HTML, CSS, JavaScript
+* **Password Security**: bcrypt hashing via passlib
 
 ---
 
@@ -31,11 +31,11 @@ A **secure, user-specific To-Do application** built with **FastAPI** and **SQLit
 1. **Clone the repo**:
 
 ```bash
-git clone <repo_url>
-cd To-Do
+git clone https://github.com/Nandhana-AM/To-Do-App.git
+cd To-Do-App
 ```
 
-2. **Create virtual environment**:
+2. **Create a virtual environment**:
 
 ```bash
 python -m venv venv
@@ -68,5 +68,5 @@ uvicorn main:app --reload
 
 * Switch to **PostgreSQL** for production-ready deployment.
 * Add **public/shared todo lists** for collaboration.
-* Improve UI with **React/Vue** for a more dynamic experience.
-* Deploy on **cloud platforms** (Render, Railway, Heroku, etc.).
+* Improve UI with **React or Vue** for a more dynamic experience.
+* Deploy on **cloud platforms** such as Render, Railway, or Heroku.
