@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Tasks - To-Do App</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <span class="brand-icon">✓</span>
+                <span class="brand-text">TaskMaster</span>
+            </div>
+            <div class="nav-links">
+                <span class="user-badge">
+                    <span class="user-icon">👤</span>
+                    <span class="username">{{ user.username }}</span>
+                </span>
+                <a href="/change-password" class="nav-link">Change Password</a>
+                <a href="/logout" class="nav-link logout">Logout</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        
+        {% with messages = get_flashed_messages(request) %}
+            {% if messages %}
+                <div class="flash-messages">
+                {% for message in messages %}
+                    <div class="message {{ message.category }}-message">
+                        <span class="message-icon">{% if message.category == 'error' %}⚠️{% else %}✓{% endif %}</span>
+                        <span>{{ message.message }}</span>
+                    </div>
+                {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <div class="header-section">
+            <h1>📋 My Tasks</h1>
+            <p class="subtitle">Stay organized and get things done</p>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card total">
+                <div class="stat-icon">📊</div>
+                <div class="stat-info">
+                    <div class="stat-number">{{ total_count }}</div>
+                    <div class="stat-label">Total Tasks</div>
+                </div>
+            </div>
+            <div class="stat-card pending">
+                <div class="stat-icon">⏳</div>
+                <div class="stat-info">
+                    <div class="stat-number">{{ pending_count }}</div>
+                    <div class="stat-label">Pending</div>
+                </div>
+            </div>
+            <div class="stat-card completed">
+                <div class="stat-icon">✅</div>
+                <div class="stat-info">
+                    <div class="stat-number">{{ completed_count }}</div>
+                    <div class="stat-label">Completed</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card add-todo-card">
+            <h2>➕ Add New Task</h2>
+            <form method="post" action="/add_todo" class="add-todo-form">
+                <div class="form-row">
+                    <input type="text" name="title" placeholder="Task title (e.g., Buy groceries)" required maxlength="200">
+                    <input type="text" name="description" placeholder="Description (optional)" maxlength="500">
+                    <button type="submit" class="btn-primary">
+                        <span>Add Task</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <div class="card todos-card">
+            <div class="todos-header">
+                <h2>Your Tasks</h2>
+                 <div class="filter-nav">
+                    <a href="/?filter=all" class="filter-btn {% if current_filter == 'all' %}active{% endif %}">All</a>
+                    <a href="/?filter=pending" class="filter-btn {% if current_filter == 'pending' %}active{% endif %}">Pending</a>
+                    <a href="/?filter=completed" class="filter-btn {% if current_filter == 'completed' %}active{% endif %}">Completed</a>
+                </div>
+                {% if completed_count > 0 %}
+                <form method="post" action="/delete_all_completed" style="display: inline;">
+                    <button type="submit" class="btn-clear" onclick="return confirm('Delete all completed tasks?')">
+                        🗑️ Clear Completed
+                    </button>
+                </form>
+                {% endif %}
+            </div>
+
+            {% if todos %}
+                <div class="todo-list">
+                    {% for todo in todos %}
+                        <div class="todo-item {% if todo.completed %}completed{% endif %}">
+                            <div class="todo-checkbox">
+                                <form method="post" action="/toggle_todo/{{ todo.id }}">
+                                    <button type="submit" class="checkbox-btn" aria-label="Toggle completion">
+                                        {% if todo.completed %}
+                                            <span class="checkmark">✓</span>
+                                        {% else %}
+                                            <span class="checkmark-empty"></span>
+                                        {% endif %}
+                                    </button>
+                                </form>
+                            </div>
+                            <div class="todo-content">
+                                <h3 class="todo-title">{{ todo.title }}</h3>
+                                {% if todo.description %}
+                                    <p class="todo-description">{{ todo.description }}</p>
+                                {% endif %}
+                                <span class="todo-date">{{ todo.created_at.strftime('%b %d, %Y') }}</span>
+                            </div>
+                            <div class="todo-actions">
+                                <form method="post" action="/delete_todo/{{ todo.id }}" style="display: inline;">
+                                    <button type="submit" class="btn-delete" onclick="return confirm('Delete this task?')" aria-label="Delete task">
+                                        🗑️
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    <div class="empty-icon">📝</div>
+                    <h3>No tasks for this filter!</h3>
+                    <p>Add a new task or change your filter to see more.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <footer class="footer">
+        <p>© 2024 TaskMaster - Built with FastAPI & SQLAlchemy</p>
+    </footer>
+</body>
+</html>

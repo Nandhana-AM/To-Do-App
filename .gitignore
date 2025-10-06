@@ -1,0 +1,22 @@
+# Virtual Environment
+venv/
+/venv/
+*.pyc
+
+# Python cache
+__cache__/
+
+# Database file
+*.db
+*.sqlite3
+
+# Environment variables
+# Ignore all .env files
+.env
+.env.*
+# Except for the example file
+!*.env.example
+
+# OS-specific files
+.DS_Store
+Thumbs.db

@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - To-Do App</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="auth-container">
+        <div class="auth-box">
+            <div class="auth-header">
+                <div class="auth-icon">✓</div>
+                <h1>Welcome Back</h1>
+                <p class="auth-subtitle">Login to manage your tasks</p>
+            </div>
+
+            {% with messages = get_flashed_messages(request) %}
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="message {{ message.category }}-message">
+                            <span class="message-icon">{% if message.category == 'error' %}⚠️{% else %}✓{% endif %}</span>
+                            <span>{{ message.message }}</span>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <form action="/login" method="post" class="auth-form">
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" name="username" placeholder="Enter your username" required autofocus>
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" placeholder="Enter your password" required>
+                </div>
+                <button type="submit" class="btn-primary">Login</button>
+            </form>
+
+            <div class="auth-footer">
+                <p>Don't have an account? <a href="/register" class="auth-link">Register here</a></p>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <p>© 2024 TaskMaster - Built with FastAPI & SQLAlchemy</p>
+    </footer>
+</body>
+</html>

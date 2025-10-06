@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - To-Do App</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="auth-container">
+        <div class="auth-box">
+            <div class="auth-header">
+                <div class="auth-icon">✓</div>
+                <h1>Create Account</h1>
+                <p class="auth-subtitle">Join TaskMaster to organize your life</p>
+            </div>
+
+            {% with messages = get_flashed_messages(request) %}
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="message {{ message.category }}-message">
+                            <span class="message-icon">⚠️</span>
+                            <span>{{ message.message }}</span>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <form action="/register" method="post" class="auth-form">
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" name="username" placeholder="Choose a username (min 3 characters)" required minlength="3" autofocus>
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" placeholder="Choose a password (min 6 characters)" required minlength="6">
+                </div>
+                <button type="submit" class="btn-primary">Create Account</button>
+            </form>
+
+            <div class="auth-footer">
+                <p>Already have an account? <a href="/login" class="auth-link">Login here</a></p>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <p>© 2024 TaskMaster - Built with FastAPI & SQLAlchemy</p>
+    </footer>
+</body>
+</html>
