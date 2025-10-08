@@ -19,11 +19,11 @@ from jose import jwt, JWTError
 from starlette.middleware.sessions import SessionMiddleware
 
 
-# NEW: Load environment variables from .env file
+# Load environment variables from .env file
 load_dotenv()
 
 # ----------------------------
-# Config (Now loaded securely from environment variables)
+# Config (Loaded securely from environment variables)
 # ----------------------------
 SECRET_KEY = os.environ.get("SECRET_KEY")
 ALGORITHM = "HS256"
@@ -34,9 +34,8 @@ if SECRET_KEY is None:
     raise ValueError("SECRET_KEY is not set in the environment. Please create a .env file.")
 
 # ----------------------------
-# NEW: Logging Setup
+# Logging Setup
 # ----------------------------
-# Get a logger instance
 logger = logging.getLogger(__name__)
 
 def setup_logging():
@@ -65,7 +64,6 @@ engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
 SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False)
 Base = declarative_base()
 
-# ... User and Todo models (keep them as they are)
 class User(Base):
     __tablename__ = "users"
     id = Column(Integer, primary_key=True, index=True)
@@ -86,7 +84,9 @@ class Todo(Base):
 
 Base.metadata.create_all(bind=engine)
 
-# ... Password & JWT Helpers (keep them as they are)
+# ----------------------------
+# Password & JWT Helpers
+# ----------------------------
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto", bcrypt__rounds=12)
 
 def get_password_hash(password):
@@ -132,7 +132,6 @@ app.add_middleware(SessionMiddleware, secret_key=SECRET_KEY)
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
-# NEW: Run the logging setup when the application starts
 @app.on_event("startup")
 async def startup_event():
     setup_logging()
@@ -145,7 +144,6 @@ def get_db():
     finally:
         db.close()
         
-# ... Flash message helpers (keep them as they are)
 def flash(request: Request, message: str, category: str = "info"):
     if "_messages" not in request.session: request.session["_messages"] = []
     request.session["_messages"].append({"message": message, "category": category})
@@ -156,10 +154,8 @@ def get_flashed_messages(request: Request):
 templates.env.globals['get_flashed_messages'] = get_flashed_messages
 
 # ----------------------------
-# Routes (MODIFIED with logging)
+# Routes
 # ----------------------------
-
-# ... index route (no logging needed here)
 @app.get("/", response_class=HTMLResponse)
 def index(
     request: Request,
@@ -186,14 +182,12 @@ def index(
         "total_count": len(all_todos), "current_filter": filter
     })
 
-
 @app.get("/register", response_class=HTMLResponse)
 def register_page(request: Request):
     return templates.TemplateResponse("register.html", {"request": request})
 
 @app.post("/register")
 def register(request: Request, username: str = Form(...), password: str = Form(...), db: Session = Depends(get_db)):
-    # ... (validation logic remains the same)
     if len(username) < 3:
         flash(request, "Username must be at least 3 characters long", "error")
         return templates.TemplateResponse("register.html", {"request": request}, status_code=400)
@@ -208,7 +202,7 @@ def register(request: Request, username: str = Form(...), password: str = Form(.
     db.add(user)
     db.commit()
     
-    logger.info(f"New user registered: '{username}'") # MODIFIED
+    logger.info(f"New user registered: '{username}'")
     
     flash(request, "Registration successful! Please login.", "success")
     return RedirectResponse("/login", status_code=303)
@@ -221,7 +215,7 @@ def login_page(request: Request):
 def login(request: Request, username: str = Form(...), password: str = Form(...), db: Session = Depends(get_db)):
     user = db.query(User).filter(User.username == username).first()
     if not user or not verify_password(password, user.hashed_password):
-        logger.warning(f"Failed login attempt for username: '{username}'") # MODIFIED
+        logger.warning(f"Failed login attempt for username: '{username}'")
         flash(request, "Invalid username or password", "error")
         return templates.TemplateResponse("login.html", {"request": request}, status_code=401)
     
@@ -229,30 +223,37 @@ def login(request: Request, username: str = Form(...), password: str = Form(...)
     response = RedirectResponse("/", status_code=303)
     response.set_cookie(key="access_token", value=access_token, httponly=True, max_age=ACCESS_TOKEN_EXPIRE_MINUTES * 60, samesite="lax")
     
-    logger.info(f"User logged in successfully: '{username}'") # MODIFIED
+    logger.info(f"User logged in successfully: '{username}'")
     
     return response
 
-# ... change_password route
+@app.get("/change-password", response_class=HTMLResponse)
+def change_password_page(request: Request, user: User = Depends(get_current_user)):
+    if isinstance(user, RedirectResponse):
+        return user
+    return templates.TemplateResponse("change_password.html", {"request": request, "user": user})
+
 @app.post("/change-password")
 def change_password(request: Request, old_password: str = Form(...), new_password: str = Form(...), confirm_password: str = Form(...), db: Session = Depends(get_db), user: User = Depends(get_current_user)):
-    # ... (validation logic)
     if isinstance(user, RedirectResponse): return user
     if not verify_password(old_password, user.hashed_password):
         flash(request, "Current password is incorrect", "error")
         return templates.TemplateResponse("change_password.html", {"request": request, "user": user}, status_code=400)
-    
-    # ... more validation
+    if len(new_password) < 6:
+        flash(request, "New password must be at least 6 characters long", "error")
+        return templates.TemplateResponse("change_password.html", {"request": request, "user": user}, status_code=400)
+    if new_password != confirm_password:
+        flash(request, "New passwords do not match", "error")
+        return templates.TemplateResponse("change_password.html", {"request": request, "user": user}, status_code=400)
     
     db_user = db.query(User).filter(User.id == user.id).first()
     db_user.hashed_password = get_password_hash(new_password)
     db.commit()
     
-    logger.info(f"User '{user.username}' changed their password successfully.") # MODIFIED
+    logger.info(f"User '{user.username}' changed their password successfully.")
     
     flash(request, "Password changed successfully!", "success")
     return templates.TemplateResponse("change_password.html", {"request": request, "user": user})
-
 
 @app.post("/add_todo")
 def add_todo(request: Request, title: str = Form(...), description: str = Form(""), db: Session = Depends(get_db), user: User = Depends(get_current_user)):
@@ -265,7 +266,7 @@ def add_todo(request: Request, title: str = Form(...), description: str = Form("
     db.add(todo)
     db.commit()
     
-    logger.info(f"User '{user.username}' added a new task: '{title.strip()}' (ID: {todo.id})") # MODIFIED
+    logger.info(f"User '{user.username}' added a new task: '{title.strip()}' (ID: {todo.id})")
     
     flash(request, "Task added successfully.", "success")
     return RedirectResponse("/?filter=pending", status_code=303)
@@ -280,7 +281,7 @@ def toggle_todo(request: Request, todo_id: int, db: Session = Depends(get_db), u
     db.commit()
 
     status = "completed" if todo.completed else "pending"
-    logger.info(f"User '{user.username}' changed status of task ID {todo_id} to '{status}'") # MODIFIED
+    logger.info(f"User '{user.username}' changed status of task ID {todo_id} to '{status}'")
     
     referer = request.headers.get("referer", "/")
     return RedirectResponse(referer, status_code=303)
@@ -294,10 +295,25 @@ def delete_todo(request: Request, todo_id: int, db: Session = Depends(get_db), u
     db.delete(todo)
     db.commit()
 
-    logger.info(f"User '{user.username}' deleted task ID {todo_id}") # MODIFIED
+    logger.info(f"User '{user.username}' deleted task ID {todo_id}")
     
     flash(request, "Task deleted.", "success")
     referer = request.headers.get("referer", "/")
     return RedirectResponse(referer, status_code=303)
 
-# ... (rest of the routes like delete_all_completed, logout, health_check can remain as they are, or add logging if you wish)
+@app.post("/delete_all_completed")
+def delete_all_completed(request: Request, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    if isinstance(user, RedirectResponse):
+        return user
+    db.query(Todo).filter(Todo.user_id == user.id, Todo.completed == True).delete()
+    db.commit()
+    logger.info(f"User '{user.username}' deleted all their completed tasks.")
+    flash(request, "All completed tasks have been cleared.", "success")
+    return RedirectResponse("/", status_code=303)
+
+@app.get("/logout")
+def logout():
+    response = RedirectResponse(url="/login", status_code=303)
+    response.delete_cookie(key="access_token")
+    logger.info("User logged out.")
+    return response
